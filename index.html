@@ -17,6 +17,7 @@ a.c:hover{transform:translateY(-3px);box-shadow:0 6px 18px #0008}
 .m{font-size:12px;color:#8a8f9a;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .x{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:#000a;color:#fff;font-size:16px;cursor:pointer;opacity:0;z-index:1}a.c:hover .x{opacity:1}.x:hover{background:#d33}
 #tools{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}#tools button{background:#262a33;color:#ccc;border:1px solid #3a3f4a;border-radius:8px;padding:6px 12px;cursor:pointer}
+.gh{grid-column:1/-1;margin:14px 0 0;font-size:17px;color:#9fb4ff;border-bottom:1px solid #2a2d35;padding-bottom:6px}.gh small{color:#777;font-weight:400}
 </style></head><body>
 <header><h1>我的書籤 <small id="n">717 個</small></h1>
 <div id="tabs"></div><div id="tools"><input id="q" placeholder="搜尋名稱或網址…"><button id="undo">復原上一個</button><button id="reset">全部還原</button><span id="del" style="font-size:13px;color:#888"></span></div></header>
@@ -34,9 +35,13 @@ function draw(){const q=document.getElementById("q").value.toLowerCase();
 [...tabs.children].forEach(b=>b.classList.toggle("on",b.dataset.f==cur));
 const L=D.filter(i=>!RM.has(i.u)&&(cur=="全部"||topF(i.f)==cur)&&(i.t+i.u).toLowerCase().includes(q));
 document.getElementById("n").textContent=L.length+" 個";
-document.getElementById("g").innerHTML=L.map(i=>`<a class="c" href="${esc(i.u)}" target="_blank" title="${esc(i.u)}"><button class="x" data-u="${esc(i.u)}" title="刪除">×</button>
+const site=i=>{const h=i.d.replace(/^(www|m|mobile)\./,"");const k={"youtu.be":"youtube.com"}[h]||h;const p=k.split(".");return p.length>2&&!/^(com|co|org|net|gov|edu)$/.test(p[p.length-2])?p.slice(-2).join("."):p.slice(-3).join(".").replace(/^[^.]+\.(?=[^.]+\.(com|co|org|net)\.)/,"")};
+const cnt={};L.forEach(i=>{i.s=site(i);cnt[i.s]=(cnt[i.s]||0)+1});
+L.sort((a,b)=>(cnt[b.s]>1)-(cnt[a.s]>1)||cnt[b.s]-cnt[a.s]||a.s.localeCompare(b.s)||a.t.localeCompare(b.t));
+let last="",other=false;
+document.getElementById("g").innerHTML=L.map(i=>{let h="";if(cnt[i.s]>1){if(i.s!=last){h=`<h3 class="gh">${esc(i.s)} <small>${cnt[i.s]}</small></h3>`;last=i.s}}else if(!other){other=true;h=`<h3 class="gh">其他網站</h3>`}return h+`<a class="c" href="${esc(i.u)}" target="_blank" title="${esc(i.u)}"><button class="x" data-u="${esc(i.u)}" title="刪除">×</button>
 <div class="th" ${i.img?`style="background-image:url('${esc(i.img)}')"`:""}>${i.img?"":`<img src="${i.fav}" loading="lazy">`}</div>
-<div class="b"><div class="t">${esc(i.t)}</div><div class="m">${esc(i.f)} · ${esc(i.d)}</div></div></a>`).join("");
+<div class="b"><div class="t">${esc(i.t)}</div><div class="m">${esc(i.f)} · ${esc(i.d)}</div></div></a>`}).join("");
 document.getElementById("del").textContent=RM.size?"已刪除 "+RM.size+" 個":"";}
 document.getElementById("g").addEventListener("click",e=>{const b=e.target.closest(".x");if(!b)return;e.preventDefault();e.stopPropagation();RM.add(b.dataset.u);hist.push(b.dataset.u);save();draw()});
 document.getElementById("undo").onclick=()=>{const u=hist.pop();if(u){RM.delete(u);save();draw()}};
